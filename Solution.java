@@ -64,7 +64,7 @@ public class Solution {
                 int bandWidth = bandwidths.get(num);
                 Queue<Packet> nodes = startNode;
                 while (!nodes.isEmpty()) {
-                    Client exploringClient =
+                    Packet exploringPacket = nodes.poll();
                     if (bandWidth > 0) {
                         /** for loop
                          explore the next node
@@ -78,15 +78,8 @@ public class Solution {
 
             }
         }
-        System.out.println(graph.get(2962));
         /* TODO: Your solution goes here */
-        sol.paths = Traversals.bfsPaths(graph, clients);
         return sol;
     }
-
-    private int outputPaths_Helper() {
-        return 0;
-    }
-
-
+    
 }

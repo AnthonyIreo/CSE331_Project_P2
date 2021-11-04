@@ -42,31 +42,27 @@ public class Solution {
             }
         });
         int size_Client = clients.size();
-        for (Client client: clients) {
-            client.priority = size_Client;
-            size_Client--;
-        }
-        int contentProvider = graph.contentProvider;
-        HashMap<Integer, ArrayList<Integer>> paths = Traversals.bfsPaths(graph, clients);
         HashMap<Integer, Integer> step_path = new HashMap<>(clients.size());
         for (Client client: clients) {
             client.priority = size_Client;
             step_path.put(client.id, 0);
             size_Client--;
         }
-        HashMap<Integer, Queue<Packet>> situ_Node = new HashMap<>(graph.size());
-        Queue<Client> startNode = new LinkedList<>() {
+        int contentProvider = graph.contentProvider;
+        HashMap<Integer, ArrayList<Integer>> paths = Traversals.bfsPaths(graph, clients);
+        HashMap<Integer, Queue<Packet>> situ_Node = new HashMap<>(graph.size() / 2);
+        Queue<Packet> startNode = new LinkedList<>() {
              {
-                 addAll(clients);
-                 sort();
+                 for (Client client: clients) {
+                     add(new Packet(client.id, paths.get(client.id)));
+                 }
             }
         };
-        startNode.addAll(clients);
         situ_Node.put(contentProvider, startNode);
         while (!situ_Node.isEmpty()) {
             for (int num: situ_Node.keySet()) {
                 int bandWidth = bandwidths.get(num);
-                Queue<Client> nodes = startNode;
+                Queue<Packet> nodes = startNode;
                 while (!nodes.isEmpty()) {
                     Client exploringClient =
                     if (bandWidth > 0) {

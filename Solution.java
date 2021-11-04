@@ -8,6 +8,7 @@ public class Solution {
     private Graph graph;
     private ArrayList<Client> clients;
     private ArrayList<Integer> bandwidths;
+    private HashMap<Integer, Queue<Packet>> situ_Node;
 
     /**
      * Basic Constructor
@@ -19,6 +20,7 @@ public class Solution {
         this.graph = info.graph;
         this.clients = info.clients;
         this.bandwidths = info.bandwidths;
+        this.situ_Node = new HashMap<>(graph.size() / 2);
     }
 
     /**
@@ -50,7 +52,6 @@ public class Solution {
         }
         int contentProvider = graph.contentProvider;
         HashMap<Integer, ArrayList<Integer>> paths = Traversals.bfsPaths(graph, clients);
-        HashMap<Integer, Queue<Packet>> situ_Node = new HashMap<>(graph.size() / 2);
         Queue<Packet> startNode = new LinkedList<>() {
              {
                  for (Client client: clients) {
@@ -60,16 +61,18 @@ public class Solution {
         };
         situ_Node.put(contentProvider, startNode);
         while (!situ_Node.isEmpty()) {
+            HashMap<Integer, ArrayList<Integer>> waiting_node = new HashMap<>();
             for (int num: situ_Node.keySet()) {
                 int bandWidth = bandwidths.get(num);
-                Queue<Packet> nodes = startNode;
+                Queue<Packet> nodes = situ_Node.get(num);
                 while (!nodes.isEmpty()) {
                     Packet exploringPacket = nodes.poll();
                     if (bandWidth > 0) {
-                        /** for loop
-                         explore the next node
+                        /**
+                         explore the exploring Packet
                          put the node to the next level
                          **/
+
                         bandWidth--;
                     } else {
                         break;
@@ -81,5 +84,5 @@ public class Solution {
         /* TODO: Your solution goes here */
         return sol;
     }
-    
+
 }

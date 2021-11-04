@@ -37,7 +37,7 @@ public class Solution {
                 else {
                     if (o1.payment > o2.payment) return -1;
                     else if (o1.payment < o2.payment) return 1;
-                    return 0;
+                    else return 0;
                 }
             }
         });
@@ -54,19 +54,37 @@ public class Solution {
             step_path.put(client.id, 0);
             size_Client--;
         }
-        HashMap<Integer, Queue<Client>> situ_Node = new HashMap<>(graph.size());
+        HashMap<Integer, Queue<Packet>> situ_Node = new HashMap<>(graph.size());
         Queue<Client> startNode = new LinkedList<>() {
              {
                  addAll(clients);
+                 sort();
             }
         };
         startNode.addAll(clients);
         situ_Node.put(contentProvider, startNode);
         while (!situ_Node.isEmpty()) {
+            for (int num: situ_Node.keySet()) {
+                int bandWidth = bandwidths.get(num);
+                Queue<Client> nodes = startNode;
+                while (!nodes.isEmpty()) {
+                    Client exploringClient =
+                    if (bandWidth > 0) {
+                        /** for loop
+                         explore the next node
+                         put the node to the next level
+                         **/
+                        bandWidth--;
+                    } else {
+                        break;
+                    }
+                }
 
+            }
         }
-
+        System.out.println(graph.get(2962));
         /* TODO: Your solution goes here */
+        sol.paths = Traversals.bfsPaths(graph, clients);
         return sol;
     }
 

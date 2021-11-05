@@ -8,8 +8,12 @@ public class Solution {
     private Graph graph;
     private ArrayList<Client> clients;
     private ArrayList<Integer> bandwidths;
-    private HashMap<Integer, PriorityQueue<Packet>> situ_Node;
+    // My Data Structure
+    private HashMap<Integer, LinkedList<Packet>> situ_Node;
     private HashMap<Integer, Client> clientMap;
+    private HashMap<Integer, Packet> packetMap;
+    private HashMap<Integer, Integer> locations_path;
+    private HashMap<Integer, LinkedList<Packet>> level_waitingList;
 
     /**
      * Basic Constructor
@@ -23,6 +27,9 @@ public class Solution {
         this.bandwidths = info.bandwidths;
         this.situ_Node = new HashMap<>(graph.size() / 2);
         this.clientMap = new HashMap<>(clients.size());
+        this.locations_path = new HashMap<>(clients.size());
+        this.packetMap = new HashMap<>(clients.size());
+        this.level_waitingList = new HashMap<>();
     }
 
     /**
@@ -31,16 +38,6 @@ public class Solution {
      *
      * @return SolutionObject containing the paths, priorities and bandwidths
      */
-    //大纲：
-    //1，一次bfs从起点到终点
-    //2，遍历室所有点
-    //3，遍历每一个点的路径
-    //4，当在当前点的路径到达某个点需要等待时间超过时限，路径更改
-    //5，路径不去原本超时的点，换另一个不需要等待的点（bfs判定）
-    //6，规划从那个点到终点的bfs路线
-    //7，如果新路径出现需要等待时间超过时限，重复步骤5,6
-    //8，得出新的点的路径
-    //
     public SolutionObject outputPaths() {
         SolutionObject sol = new SolutionObject();
         clients.sort(new Comparator<Client>() {
@@ -56,10 +53,9 @@ public class Solution {
             }
         });
         int priority_Client = clients.size();
-        HashMap<Integer, Integer> step_path = new HashMap<>(clients.size());
         for (Client client: clients) {
             client.priority = priority_Client;
-            step_path.put(client.id, 0);
+            locations_path.put(client.id, 0);
             clientMap.put(client.id, client);
             priority_Client--;
         }
@@ -76,19 +72,18 @@ public class Solution {
 
         int contentProvider = graph.contentProvider;
         HashMap<Integer, ArrayList<Integer>> paths = Traversals.bfsPaths(graph, clients);
-        PriorityQueue<Packet> startNode = new PriorityQueue<>() {
-            {
-                for (Client client: clients) {
-                   add(new Packet(client.id, paths.get(client.id)));
-                }
-            }
-        };
+        LinkedList<Packet> startNode = new LinkedList<>();
+        for (Client client: clients) {
+            Packet packet = new Packet(client.id, paths.get(client.id);
+            startNode.add(packet);
+            packetMap.put(packet.client, packet);
+        }
         situ_Node.put(contentProvider, startNode);
         while (!situ_Node.isEmpty()) {
             HashMap<Integer, ArrayList<Integer>> waiting_node = new HashMap<>();
             for (int num: situ_Node.keySet()) {
                 int bandWidth = bandwidths.get(num);
-                Queue<Packet> nodes = situ_Node.get(num);
+                LinkedList<Packet> nodes = situ_Node.get(num);
                 while (!nodes.isEmpty()) {
                     Packet exploringPacket = nodes.poll();
                     if (bandWidth > 0) {
@@ -109,4 +104,19 @@ public class Solution {
         return sol;
     }
 
+    private int next_level(Packet packet) {
+        int packetID = packet.client;
+        ArrayList<Integer> path = packet.path;
+        float tolerant = clientMap.get(packetID).alpha;
+        int d = info.shortestDelays.get(packetID);
+        int nextNode = path.get(locations_path.get(packetID));
+        int bandWidth_nextNode = bandwidths.get(nextNode);
+        int num_waitingPacket = situ_Node.get(nextNode).size();
+        if (level_waitingList.containsKey(nextNode)) {
+            num_waitingPacket += level_waitingList.get(nextNode).size();
+        }
+        double percentage = 0.4;
+        if ((int)(num_waitingPacket / bandWidth_nextNode) < (int)(tolerant * d * percentage))
+        return 0;
+    }
 }

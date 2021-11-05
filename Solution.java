@@ -8,7 +8,8 @@ public class Solution {
     private Graph graph;
     private ArrayList<Client> clients;
     private ArrayList<Integer> bandwidths;
-    private HashMap<Integer, Queue<Packet>> situ_Node;
+    private HashMap<Integer, PriorityQueue<Packet>> situ_Node;
+    private HashMap<Integer, Client> clientMap;
 
     /**
      * Basic Constructor
@@ -21,6 +22,7 @@ public class Solution {
         this.clients = info.clients;
         this.bandwidths = info.bandwidths;
         this.situ_Node = new HashMap<>(graph.size() / 2);
+        this.clientMap = new HashMap<>(clients.size());
     }
 
     /**
@@ -43,31 +45,32 @@ public class Solution {
                 }
             }
         });
-        
-        //大纲：
-        //1，一次bfs从起点到终点
-        //2，遍历室所有点
-        //3，遍历每一个点的路径
-        //4，当在当前点的路径到达某个点需要等待时间超过时限，路径更改
-        //5，路径不去原本超时的点，换另一个不需要等待的点（bfs判定）
-        //6，规划从那个点到终点的bfs路线
-        //7，如果新路径出现需要等待时间超过时限，重复步骤5,6
-        //8，得出新的点的路径
-        //
-        int size_Client = clients.size();
+        int priority_Client = clients.size();
         HashMap<Integer, Integer> step_path = new HashMap<>(clients.size());
         for (Client client: clients) {
-            client.priority = size_Client;
+            client.priority = priority_Client;
             step_path.put(client.id, 0);
-            size_Client--;
+            clientMap.put(client.id, client);
+            priority_Client--;
         }
+        Comparator<Packet> comparator = new Comparator<Packet>() {
+            @Override
+            public int compare(Packet o1, Packet o2) {
+                int pri_o1 = clientMap.get(o1.client).priority;
+                int pri_o2 = clientMap.get(o2.client).priority;
+                if (pri_o1 > pri_o2) return -1;
+                else if (pri_o1 < pri_o2) return 1;
+                return 0;
+            }
+        };
+
         int contentProvider = graph.contentProvider;
         HashMap<Integer, ArrayList<Integer>> paths = Traversals.bfsPaths(graph, clients);
-        Queue<Packet> startNode = new LinkedList<>() {
-             {
-                 for (Client client: clients) {
-                     add(new Packet(client.id, paths.get(client.id)));
-                 }
+        PriorityQueue<Packet> startNode = new PriorityQueue<>() {
+            {
+                for (Client client: clients) {
+                   add(new Packet(client.id, paths.get(client.id)));
+                }
             }
         };
         situ_Node.put(contentProvider, startNode);

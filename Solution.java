@@ -11,7 +11,7 @@ public class Solution {
     // My Data Structure
     private HashMap<Integer, LinkedList<Packet>> situ_Node;
     private HashMap<Integer, Client> clientMap;
-    private HashMap<Integer, Packet> packetMap;
+    //private HashMap<Integer, Packet> packetMap;
     private HashMap<Integer, Integer> locations_path;
     private HashMap<Integer, LinkedList<Packet>> level_waitingList;
 
@@ -28,7 +28,7 @@ public class Solution {
         this.situ_Node = new HashMap<>(graph.size() / 2);
         this.clientMap = new HashMap<>(clients.size());
         this.locations_path = new HashMap<>(clients.size());
-        this.packetMap = new HashMap<>(clients.size());
+        //this.packetMap = new HashMap<>(clients.size());
         this.level_waitingList = new HashMap<>();
     }
 
@@ -74,16 +74,16 @@ public class Solution {
         HashMap<Integer, ArrayList<Integer>> paths = Traversals.bfsPaths(graph, clients);
         LinkedList<Packet> startNode = new LinkedList<>();
         for (Client client: clients) {
-            Packet packet = new Packet(client.id, paths.get(client.id);
+            Packet packet = new Packet(client.id, paths.get(client.id));
             startNode.add(packet);
-            packetMap.put(packet.client, packet);
+            //packetMap.put(packet.client, packet);
         }
         situ_Node.put(contentProvider, startNode);
         while (!situ_Node.isEmpty()) {
             HashMap<Integer, ArrayList<Integer>> waiting_node = new HashMap<>();
-            for (int num: situ_Node.keySet()) {
-                int bandWidth = bandwidths.get(num);
-                LinkedList<Packet> nodes = situ_Node.get(num);
+            for (int node: situ_Node.keySet()) {
+                int bandWidth = bandwidths.get(node);
+                LinkedList<Packet> nodes = situ_Node.get(node);
                 while (!nodes.isEmpty()) {
                     Packet exploringPacket = nodes.poll();
                     if (bandWidth > 0) {
@@ -91,7 +91,7 @@ public class Solution {
                          explore the exploring Packet
                          put the node to the next level
                          **/
-
+                        next_level(exploringPacket, node);
                         bandWidth--;
                     } else {
                         break;
@@ -109,7 +109,8 @@ public class Solution {
         ArrayList<Integer> path = packet.path;
         float tolerant = clientMap.get(packetID).alpha;
         int d = info.shortestDelays.get(packetID);
-        int nextNode = path.get(locations_path.get(packetID));
+        int location_Path = locations_path.get(packetID);
+        int nextNode = path.get(location_Path);
         int waitingTime = waitingPacket(nextNode, packet);
         double percentage = 0.4;
         if (waitingTime > (int)(tolerant * d * percentage)) {
@@ -122,11 +123,17 @@ public class Solution {
             }
 
             // update path in packet
-
-
-
+            ArrayList<Integer> updatedPath = bfsPaths(nextNode, packet.client);
+            ArrayList<Integer> currentPath = packet.path;
+            packet.path = new ArrayList<>() {
+                {
+                    addAll(currentPath.subList(0, location_Path));
+                    addAll(updatedPath);
+                }
+            };
         }
         level_waitingList.get(nextNode).add(packet);
+        locations_path.replace(packetID, location_Path + 1);
     }
 
     private int waitingPacket(int nextNode, Packet packet) {
@@ -154,12 +161,12 @@ public class Solution {
         return numWaiting / bandWidth_nextNode;
     }
 
-    private ArrayList<Integer> bfsPaths(Graph graph, ArrayList<Client> clients, int startNode, int endNode) {
+    private ArrayList<Integer> bfsPaths(int startNode, int endNode) {
         /*
             Initialize the prior array with -1 for storing the node
             that is before the current one in the shortest paths
          */
-        int[] priors = new int[graph.size()];
+        int[] priors = new int[this.graph.size()];
         Arrays.fill(priors, -1);
 
         // Run BFS, finding the nodes parent in the shortest path
@@ -167,7 +174,7 @@ public class Solution {
         searchQueue.add(startNode);
         while (!searchQueue.isEmpty()) {
             int node = searchQueue.poll();
-            for (int neighbor : graph.get(node)) {
+            for (int neighbor : this.graph.get(node)) {
                 if (priors[neighbor] == -1 && neighbor != graph.contentProvider) {
                     priors[neighbor] = node;
                     searchQueue.add(neighbor);
@@ -176,14 +183,14 @@ public class Solution {
         }
 
         // Get the final shortest paths
-        HashMap<Integer, ArrayList<Integer>> paths = pathsFromPriors(clients, priors);
+        HashMap<Integer, ArrayList<Integer>> paths = pathsFromPriors(priors);
         return paths.get(endNode);
     }
 
-    private HashMap<Integer, ArrayList<Integer>> pathsFromPriors(ArrayList<Client> clients, int[] priors) {
-        HashMap<Integer, ArrayList<Integer>> paths = new HashMap<>(clients.size());
+    private HashMap<Integer, ArrayList<Integer>> pathsFromPriors (int[] priors) {
+        HashMap<Integer, ArrayList<Integer>> paths = new HashMap<>(this.clients.size());
         // For every client, traverse the prior array, creating the path
-        for (Client client : clients) {
+        for (Client client : this.clients) {
             ArrayList<Integer> path = new ArrayList<>();
             int currentNode = client.id;
             while (currentNode != -1) {

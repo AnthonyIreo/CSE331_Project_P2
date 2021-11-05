@@ -31,6 +31,16 @@ public class Solution {
      *
      * @return SolutionObject containing the paths, priorities and bandwidths
      */
+    //大纲：
+    //1，一次bfs从起点到终点
+    //2，遍历室所有点
+    //3，遍历每一个点的路径
+    //4，当在当前点的路径到达某个点需要等待时间超过时限，路径更改
+    //5，路径不去原本超时的点，换另一个不需要等待的点（bfs判定）
+    //6，规划从那个点到终点的bfs路线
+    //7，如果新路径出现需要等待时间超过时限，重复步骤5,6
+    //8，得出新的点的路径
+    //
     public SolutionObject outputPaths() {
         SolutionObject sol = new SolutionObject();
         clients.sort(new Comparator<Client>() {
